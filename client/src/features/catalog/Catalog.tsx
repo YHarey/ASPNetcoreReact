@@ -1,30 +1,91 @@
-import { Avatar, ListItem, ListItemAvatar, ListItemText } from "@mui/material";
-import { useState, useEffect } from "react";
-import { isPropertySignature } from "typescript";
-import agent from "../../app/api/agent";
+import { Box, Checkbox, FormControl, FormControlLabel, FormGroup, FormLabel, Grid, Pagination, Paper, Radio, RadioGroup, TextField, Typography } from "@mui/material";
+import { useEffect } from "react";
+import CheckboxButtons from "../../app/components/CheckboxButtons";
+import RadioButtonGroup from "../../app/components/RadioButtonGroup";
 import LoadingComponent from "../../app/layout/LoadingComponent";
 import { Product } from "../../app/models/product";
+import { useAppDispatch, useAppSelector } from "../../app/store/configureStore";
+import { fetchFilters, fetchProductsAsync, productSelectors, setProductParams } from "./catalogSlice";
 import ProductList from "./ProductList";
+import ProductSearch from "./ProductSearch";
 
-interface Props {
-    products: Product[];
-}
+const sortOptions = [
+  {value: 'name', label: 'Alphabetical'},
+  //priceDesc these names should match variables in ProductExtensions.cs
+  {value: 'priceDesc', label: 'Price - High to low'},
+  {value: 'price', label: 'Price - Low to high'},
+
+]
 export default function Catalog() {
-    const [products , setProducts] = useState<Product[]>([]);
-    const [loading, setLoading] = useState(true);
+    const products = useAppSelector(productSelectors.selectAll);
+    const {productsLoaded, status, filtersLoaded, prodBrands, 
+      prodTypes, productParams} = useAppSelector(state => state.catalog);
+    const dispatch = useAppDispatch();
 
+    //if we use this both products and filters in one useEfect, 
+    //the products will be called twice on the API, so we split it into two
+    // useEffect(()=> {
+    //   if (!productsLoaded) dispatch(fetchProductsAsync());
+    //   if (!filtersLoaded) dispatch(fetchFilters());
+    //   },[productsLoaded, dispatch, filtersLoaded]);
+      
   useEffect(()=> {
-    agent.Catalog.list()
-    .then(products => setProducts(products))
-    .catch(error => console.log(error))
-    .finally(() => setLoading(false))
-  },[]);
+    if (!productsLoaded) dispatch(fetchProductsAsync());
+  }, [productsLoaded, dispatch]);
+  
+  useEffect(()=> {
+    if (!filtersLoaded) dispatch(fetchFilters());
+  }, [dispatch, filtersLoaded]);
 
-  if (loading) return <LoadingComponent message="...Loading Products..."/>
+
+  if (status.includes('pending')) return <LoadingComponent message="...Loading Products..."/>
 
     return (
-        <>
-        <ProductList products={products}></ProductList>
-        </>
+        <Grid container spacing={4}>
+            <Grid item xs={3}>
+              <Paper sx={{mb: 2}}>
+                  <ProductSearch />
+              </Paper>
+              <Paper sx={{mb: 2, p: 2}}>
+                  <RadioButtonGroup 
+                      selectedValue={productParams.orderBy}
+                      options={sortOptions}
+                      onChange={(e) => dispatch(setProductParams({orderBy: e.target.value}))}
+                  />
+              </Paper>
+              <Paper sx={{mb: 2, p: 2}}>
+                  <CheckboxButtons 
+                    items={prodBrands}
+                    checked={productParams.prodBrands}
+                    onChange={(items: string[]) => dispatch(setProductParams({prodBrands: items}))}
+                  />
+              </Paper>
+              <Paper sx={{mb: 2, p: 2}}>
+              <CheckboxButtons 
+                    items={prodTypes}
+                    checked={productParams.prodTypes}
+                    onChange={(items: string[]) => dispatch(setProductParams({prodTypes: items}))}
+                  />
+              </Paper>
+            </Grid>
+            <Grid item xs={9}>
+            <ProductList products={products}></ProductList>
+            </Grid>
+            <Grid item xs={3} />
+            <Grid item xs={9}>
+                  <Box display='flex' justifyContent='space-between' alignItems='center'>
+                      <Typography>
+                          Displaying 1-6 of 20 items
+                      </Typography>
+                      <Pagination 
+                        color="secondary"
+                        size="large"
+                        count={10}
+                        page={2}
+                      />
+                  </Box>
+            </Grid>
+        
+        </Grid>
     )
 }
