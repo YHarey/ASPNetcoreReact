@@ -2,9 +2,11 @@ import axios, {AxiosError, AxiosResponse} from "axios";
 import { resolve } from "path";
 import { toast } from "react-toastify";
 import { history } from "../..";
+import { PaginatedResponse } from "../models/pagination";
 
 //set 1000(1 sec) delay to show laoding indicator
-const sleep = () => new Promise(resolve => setTimeout(resolve, 200));
+const sleep = () => new Promise(resolve => setTimeout(resolve, 900));
+
 
 axios.defaults.baseURL = 'http://localhost:5500/api/';
 axios.defaults.withCredentials = true;
@@ -17,6 +19,14 @@ const responseBody = (response: AxiosResponse) => response.data;
 
 axios.interceptors.response.use(async response => {
     await sleep();
+    //console.log(response);
+    //here pagination should be lower case for axios
+    const pagination = response.headers['pagination']
+    if (pagination) {
+        response.data = new PaginatedResponse(response.data, JSON.parse(pagination));
+        
+        return response;
+    }
     return response
 },(error: AxiosError) => {
     //error.response! overrides the type safety(typescript)

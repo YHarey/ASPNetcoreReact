@@ -10,7 +10,7 @@ export default function ProductSearch() {
     // wait for a sec for user to enter search txt
     const debouncedSearch = debounce((event: any) => {
         dispatch(setProductParams({searchTxt: event.target.value}))
-    }, 1000)
+    }, 900)
 
     return (
         <TextField 

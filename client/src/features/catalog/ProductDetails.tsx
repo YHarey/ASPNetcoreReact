@@ -51,16 +51,16 @@ export default function ProductDetails(){
                 <img src={product.pictureUrl} alt={product.name} style={{width: '100%'}} />
             </Grid>
             <Grid item xs={6}>
-                <Typography variant="h3">{product.name}</Typography>
+                <Typography variant="h4">{product.name}</Typography>
                 <Divider sx={{mb: 2}} />
-                <Typography variant="h4" color={'secondary'}>{currencyFormat(product.price)}</Typography>
+                <Typography variant="h5" color={'secondary'}>Price: {currencyFormat(product.price)}</Typography>
                 <TableContainer>
                     <Table>
                         <TableBody>
-                            <TableRow>
+                            {/* <TableRow>
                                 <TableCell>Name</TableCell>
                                 <TableCell>{product.name}</TableCell>
-                            </TableRow>
+                            </TableRow> */}
                             <TableRow>
                                 <TableCell>Description</TableCell>
                                 <TableCell>
